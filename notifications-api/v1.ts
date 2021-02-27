@@ -23,7 +23,7 @@ import {
   getMissingParams,
   UserOptions,
 } from 'ibm-cloud-sdk-core';
-import { getSdkHeaders } from '../lib/common';
+import { getSdkHeaders, getServiceURL } from '../lib/common';
 
 /**
  * notifications-api
@@ -32,6 +32,7 @@ import { getSdkHeaders } from '../lib/common';
 class NotificationsApiV1 extends BaseService {
   static DEFAULT_SERVICE_URL: string = 'https://us-south.secadvisor.cloud.ibm.com/notifications';
   static DEFAULT_SERVICE_NAME: string = 'notifications_api';
+  static DEFAULT_API_NAME: string = "notifications"
 
   /*************************
    * Factory method
@@ -47,18 +48,22 @@ class NotificationsApiV1 extends BaseService {
    * @returns {NotificationsApiV1}
    */
 
-  public static newInstance(options: UserOptions): NotificationsApiV1 {
+  public static async newInstance(options: UserOptions): Promise<NotificationsApiV1> {
+    let serviceURL
+    try{
+      serviceURL = await getServiceURL(options, this.DEFAULT_API_NAME)
+    }catch(err){
+      return Promise.reject(err)
+    }
     if (!options.serviceName) {
       options.serviceName = this.DEFAULT_SERVICE_NAME;
     }
     if (!options.authenticator) {
       options.authenticator = getAuthenticatorFromEnvironment(options.serviceName);
     }
+    options.serviceUrl = serviceURL
     const service = new NotificationsApiV1(options);
     service.configureService(options.serviceName);
-    if (options.serviceUrl) {
-      service.setServiceUrl(options.serviceUrl);
-    }
     return service;
   }
 
@@ -537,7 +542,7 @@ class NotificationsApiV1 extends BaseService {
   ): Promise<NotificationsApiV1.Response<NotificationsApiV1.PublicKeyResponse>> {
     const _params = extend({}, params);
     const requiredParams = ['accountId'];
-
+    console.log("FUCNGING GUVK")
     return new Promise((resolve, reject) => {
       const missingParams = getMissingParams(_params, requiredParams);
       if (missingParams) {
