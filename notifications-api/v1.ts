@@ -49,17 +49,17 @@ class NotificationsApiV1 extends BaseService {
    */
 
   public static async newInstance(options: UserOptions): Promise<NotificationsApiV1> {
-    let serviceURL
-    try{
-      serviceURL = await getServiceURL(options, this.DEFAULT_API_NAME)
-    }catch(err){
-      return Promise.reject(err)
-    }
     if (!options.serviceName) {
       options.serviceName = this.DEFAULT_SERVICE_NAME;
     }
     if (!options.authenticator) {
       options.authenticator = getAuthenticatorFromEnvironment(options.serviceName);
+    }
+    let serviceURL
+    try{
+      serviceURL = await getServiceURL(options, this.DEFAULT_API_NAME)
+    }catch(err){
+      return Promise.reject(err)
     }
     options.serviceUrl = serviceURL
     const service = new NotificationsApiV1(options);
@@ -77,13 +77,26 @@ class NotificationsApiV1 extends BaseService {
    * @constructor
    * @returns {NotificationsApiV1}
    */
-  constructor(options: UserOptions) {
+  constructor (options: UserOptions) {
     super(options);
     if (options.serviceUrl) {
       this.setServiceUrl(options.serviceUrl);
     } else {
       this.setServiceUrl(NotificationsApiV1.DEFAULT_SERVICE_URL);
     }
+  }
+
+  async setServiceUrl(url: string): Promise<any>{
+    let serviceURL
+    try{
+      serviceURL = await getServiceURL(this.baseOptions, NotificationsApiV1.DEFAULT_API_NAME)
+    }catch(err){
+      return Promise.reject(err)
+    }
+    if(serviceURL !== url){
+      return Promise.reject(new Error(`The service URL you specified is incorrect for the location selected for the account. The correct URL is: ${serviceURL}`))
+    }
+    super.setServiceUrl(url)
   }
 
   /*************************
@@ -542,7 +555,6 @@ class NotificationsApiV1 extends BaseService {
   ): Promise<NotificationsApiV1.Response<NotificationsApiV1.PublicKeyResponse>> {
     const _params = extend({}, params);
     const requiredParams = ['accountId'];
-    console.log("FUCNGING GUVK")
     return new Promise((resolve, reject) => {
       const missingParams = getMissingParams(_params, requiredParams);
       if (missingParams) {

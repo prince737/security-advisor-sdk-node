@@ -23,7 +23,7 @@ import {
   getMissingParams,
   UserOptions,
 } from 'ibm-cloud-sdk-core';
-import { getSdkHeaders } from '../lib/common';
+import { getSdkHeaders, getServiceURL } from '../lib/common';
 
 /**
  * The Findings API
@@ -32,7 +32,7 @@ import { getSdkHeaders } from '../lib/common';
 class FindingsApiV1 extends BaseService {
   static DEFAULT_SERVICE_URL: string = 'https://us-south.secadvisor.cloud.ibm.com/findings';
   static DEFAULT_SERVICE_NAME: string = 'findings-api';
-
+  static DEFAULT_API_NAME: string = "findings"
   /*************************
    * Factory method
    ************************/
@@ -47,18 +47,23 @@ class FindingsApiV1 extends BaseService {
    * @returns {FindingsApiV1}
    */
 
-  public static newInstance(options: UserOptions): FindingsApiV1 {
+  public static async newInstance(options: UserOptions): Promise<FindingsApiV1> {
     if (!options.serviceName) {
       options.serviceName = this.DEFAULT_SERVICE_NAME;
     }
     if (!options.authenticator) {
       options.authenticator = getAuthenticatorFromEnvironment(options.serviceName);
     }
+    let serviceURL
+    try{
+      serviceURL = await getServiceURL(options, this.DEFAULT_API_NAME)
+    }catch(err){
+      return Promise.reject(err)
+    }
+    
+    options.serviceUrl = serviceURL
     const service = new FindingsApiV1(options);
     service.configureService(options.serviceName);
-    if (options.serviceUrl) {
-      service.setServiceUrl(options.serviceUrl);
-    }
     return service;
   }
 
@@ -79,6 +84,19 @@ class FindingsApiV1 extends BaseService {
     } else {
       this.setServiceUrl(FindingsApiV1.DEFAULT_SERVICE_URL);
     }
+  }
+
+  async setServiceUrl(url: string): Promise<any>{
+    let serviceURL
+    try{
+      serviceURL = await getServiceURL(this.baseOptions, FindingsApiV1.DEFAULT_API_NAME)
+    }catch(err){
+      return Promise.reject(err)
+    }
+    if(serviceURL !== url){
+      return Promise.reject(new Error(`The service URL you specified is incorrect for the location selected for the account. The correct URL is: ${serviceURL}`))
+    }
+    super.setServiceUrl(url)
   }
 
   /*************************

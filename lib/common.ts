@@ -15,13 +15,11 @@
  * limitations under the License.
  */
 
-import os = require('os');
-import {
-  Authenticator, BaseService, UserOptions
-} from 'ibm-cloud-sdk-core';
 import axios from "axios";
-import { parse } from 'path';
-import { weekdays } from 'moment';
+import {
+  Authenticator, UserOptions
+} from 'ibm-cloud-sdk-core';
+import os = require('os');
 
 // tslint:disable-next-line:no-var-requires
 const pkg = require('../package.json');
@@ -47,7 +45,7 @@ export type SdkHeaders = {
  * Note: It is very important that the sdk name ends with the string `-sdk`,
  * as the analytics data collector uses this to gather usage data.
  */
-const AdminServiceBaseUrl = "https://dev.compliance.test.cloud.ibm.com/admin/v1"
+const adminServiceBaseUrl = "https://compliance.cloud.ibm.com/admin/v1"
 export function getSdkHeaders(serviceName: string, serviceVersion: string, operationId: string): SdkHeaders | {} {
 
   const sdkName = "ibm-security-advisor-node-sdk";
@@ -67,35 +65,34 @@ const parseJwt = (token) => {
   try {
     return JSON.parse(Buffer.from(token.split('.')[1], "base64").toString("binary"));
   } catch (e) {
-    console.log(e)
     return null;
   }
 };
 
 async function getLocationDetails(accountId: string, headers: any): Promise<object>{
-  let url = `${AdminServiceBaseUrl}/accounts/${accountId}/settings`
+  let url = `${adminServiceBaseUrl}/accounts/${accountId}/settings`
   let resp = await axios.get(url, headers)
-  let locationId = resp.data.location.id
+  const locationId = resp.data.location.id
 
-  url = `${AdminServiceBaseUrl}/locations/${locationId}`
+  url = `${adminServiceBaseUrl}/locations/${locationId}`
   resp = await axios.get(url, headers)
   return resp.data
 }
 
 async function getAccountId(authenticator: Authenticator, headers: any): Promise<string> {
   await authenticator.authenticate(headers)
-  let parsedToken = parseJwt(headers.headers["Authorization"].substring(7))
+  const parsedToken = parseJwt(headers.headers["Authorization"].substring(7))
   return parsedToken.account.bss
 }
 
 export async function getServiceURL(options: UserOptions, service: string): Promise<string>{
   try{
-    let headers = {headers:{"Content-Type": "application/json"}}
-    let accountId = await getAccountId(options.authenticator, headers)
+    const headers = {headers:{"Content-Type": "application/json"}}
+    const accountId = await getAccountId(options.authenticator, headers)
     if(!accountId){
       return Promise.reject(new Error("Failed to fetch location details for the user. Make sure the api key/bearer token you entered in correct.")) 
     }
-    let locationDetails = await getLocationDetails(accountId, headers)
+    const locationDetails = await getLocationDetails(accountId, headers)
     if(options.serviceUrl){
       if(locationDetails[`si_${service}_endpoint_url`] !== options.serviceUrl){
         return Promise.reject(new Error(`The service URL you specified is incorrect for the location selected for the account. The correct URL is: ${locationDetails[`si_${service}_endpoint_url`]}`)) 

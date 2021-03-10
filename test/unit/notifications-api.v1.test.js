@@ -15,8 +15,13 @@
  */
 'use strict';
 
-const { NoAuthAuthenticator, unitTestUtils } = require('ibm-cloud-sdk-core');
+const {
+  NoAuthAuthenticator,
+  unitTestUtils,
+  BearerTokenAuthenticator,
+} = require('ibm-cloud-sdk-core');
 const NotificationsApiV1 = require('../../dist/notifications-api/v1');
+const common = require('../../dist/lib/common');
 
 const { getOptions, checkUrlAndMethod, checkMediaHeaders, expectToBePromise } = unitTestUtils;
 
@@ -36,6 +41,48 @@ afterEach(() => {
 });
 
 describe('NotificationsApiV1', () => {
+  describe('newInstance test', () => {
+    const getServiceURL = common.getServiceURL;
+    afterEach(() => {
+      common.getServiceURL = getServiceURL;
+    });
+    test('successfully creates a new instance', async () => {
+      common.getServiceURL = jest.fn(() => {
+        return 'https://ss.ss';
+      });
+      const NotificationsApiV1_1 = require('../../dist/notifications-api/v1');
+      const client = await NotificationsApiV1_1.newInstance({
+        authenticator: new BearerTokenAuthenticator({ bearerToken: '1234' }),
+      });
+      expect(client.baseOptions.serviceUrl).toEqual('https://ss.ss');
+    });
+
+    test('fails to create a new instance while getServiceURL', async () => {
+      common.getServiceURL = jest.fn(() => {
+        return Promise.reject(new Error('error'));
+      });
+      const NotificationsApiV1_1 = require('../../dist/notifications-api/v1');
+      try {
+        await NotificationsApiV1_1.newInstance({
+          authenticator: new BearerTokenAuthenticator({ bearerToken: '1234' }),
+        });
+        throw new Error('Should not pass');
+      } catch (err) {
+        expect(err.message).toEqual('error');
+      }
+    });
+
+    test('fails to create a new instance while getServiceURL', async () => {
+      const NotificationsApiV1_1 = require('../../dist/notifications-api/v1');
+      try {
+        await NotificationsApiV1_1.newInstance({ serviceName: 'test' });
+        throw new Error('Should not pass');
+      } catch (err) {
+        expect(err.message).toEqual('Missing required parameters: apikey');
+      }
+    });
+  });
+
   describe('listAllChannels', () => {
     describe('positive tests', () => {
       test('should pass the right params to createRequest', () => {

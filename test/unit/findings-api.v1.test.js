@@ -15,9 +15,13 @@
  */
 'use strict';
 
-const { NoAuthAuthenticator, unitTestUtils } = require('ibm-cloud-sdk-core');
+const {
+  NoAuthAuthenticator,
+  unitTestUtils,
+  BearerTokenAuthenticator,
+} = require('ibm-cloud-sdk-core');
 const FindingsApiV1 = require('../../dist/findings-api/v1');
-
+const common = require('../../dist/lib/common');
 const {
   getOptions,
   checkUrlAndMethod,
@@ -42,6 +46,44 @@ afterEach(() => {
 });
 
 describe('FindingsApiV1', () => {
+  describe('newInstance test', () => {
+    test('successfully creates a new instance', async () => {
+      common.getServiceURL = jest.fn(() => {
+        return 'https://ss.ss';
+      });
+      const FindingsApiV1_1 = require('../../dist/findings-api/v1');
+      const client = await FindingsApiV1_1.newInstance({
+        authenticator: new BearerTokenAuthenticator({ bearerToken: '1234' }),
+      });
+      expect(client.baseOptions.serviceUrl).toEqual('https://ss.ss');
+    });
+
+    test('fails to create a new instance while getServiceURL', async () => {
+      common.getServiceURL = jest.fn(() => {
+        return Promise.reject(new Error('error'));
+      });
+      const FindingsApiV1 = require('../../dist/findings-api/v1');
+      try {
+        await FindingsApiV1.newInstance({
+          authenticator: new BearerTokenAuthenticator({ bearerToken: '1234' }),
+        });
+        throw new Error('Should not pass');
+      } catch (err) {
+        expect(err.message).toEqual('error');
+      }
+    });
+
+    test('fails to create a new instance while getServiceURL', async () => {
+      const FindingsApiV1 = require('../../dist/findings-api/v1');
+      try {
+        await FindingsApiV1.newInstance({ serviceName: 'test' });
+        throw new Error('Should not pass');
+      } catch (err) {
+        expect(err.message).toEqual('Missing required parameters: apikey');
+      }
+    });
+  });
+
   describe('postGraph', () => {
     describe('positive tests', () => {
       test('should pass the right params to createRequest', () => {
